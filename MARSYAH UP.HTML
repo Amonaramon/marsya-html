@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Pendataan Keterlambatan Siswa</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, maroon, yellow, brown);
+      color: #fff;
+      padding: 20px;
+    }
+    h1 { text-align: center; }
+    form, table {
+      background: rgba(0,0,0,0.4);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    input, select, button {
+      margin-top: 8px;
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+    }
+    button { background: maroon; color: #fff; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #fff; padding: 8px; text-align: center; }
+    th { background: rgba(0,0,0,0.6); }
+    .kelas-10 { background: linear-gradient(to right, maroon, yellow, brown); }
+    .kelas-11 { background: linear-gradient(to right, brown, yellow, maroon); }
+    .kelas-12 { background: linear-gradient(to right, yellow, maroon, brown); }
+  </style>
+</head>
+<body>
+  <h1>Pendataan Keterlambatan Siswa</h1>
+  
+  <form id="formData">
+    <label>Nama Siswa:</label>
+    <input type="text" id="nama" required>
+    
+    <label>Kelas:</label>
+    <select id="kelas" required>
+      <optgroup label="Kelas 10">
+        <option>10A</option><option>10B</option><option>10C</option><option>10D</option>
+        <option>10E</option><option>10F</option><option>10G</option><option>10H</option>
+        <option>10I</option><option>10J</option><option>10K</option><option>10L</option>
+      </optgroup>
+      <optgroup label="Kelas 11">
+        <option>11A</option><option>11B</option><option>11C</option><option>11D</option>
+        <option>11E</option><option>11F</option><option>11G</option><option>11H</option>
+        <option>11I</option><option>11J</option><option>11K</option><option>11L</option>
+      </optgroup>
+      <optgroup label="Kelas 12">
+        <option>12A</option><option>12B</option><option>12C</option><option>12D</option>
+        <option>12E</option><option>12F</option><option>12G</option><option>12H</option>
+        <option>12I</option><option>12J</option><option>12K</option>
+      </optgroup>
+    </select>
+    
+    <label>Waktu:</label>
+    <input type="time" id="waktu" required>
+    
+    <label>Tanggal:</label>
+    <input type="date" id="tanggal" required>
+    
+    <label>Jumlah Keterlambatan:</label>
+    <input type="number" id="jumlah" min="1" required>
+    
+    <button type="submit">Tambah Data</button>
+  </form>
+  
+  <table id="tabelData">
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>Kelas</th>
+        <th>Waktu</th>
+        <th>Tanggal</th>
+        <th>Jumlah</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  
+  <canvas id="chartKeterlambatan" width="400" height="200"></canvas>
+  
+  <script>
+    const form = document.getElementById('formData');
+    const tabelBody = document.querySelector('#tabelData tbody');
+    const chartCtx = document.getElementById('chartKeterlambatan').getContext('2d');
+    
+    let dataSiswa = JSON.parse(localStorage.getItem('dataSiswa')) || [];
+    
+    function renderTable() {
+      tabelBody.innerHTML = '';
+      dataSiswa.forEach(d => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${d.nama}</td>
+          <td>${d.kelas}</td>
+          <td>${d.waktu}</td>
+          <td>${d.tanggal}</td>
+          <td>${d.jumlah}</td>
+        `;
+        if (d.kelas.startsWith("10")) row.classList.add("kelas-10");
+        else if (d.kelas.startsWith("11")) row.classList.add("kelas-11");
+        else if (d.kelas.startsWith("12")) row.classList.add("kelas-12");
+        tabelBody.appendChild(row);
+      });
+    }
+    
+    function renderChart() {
+      const kelasCount = {};
+      dataSiswa.forEach(d => {
+        kelasCount[d.kelas] = (kelasCount[d.kelas] || 0) + parseInt(d.jumlah);
+      });
+      new Chart(chartCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(kelasCount),
+          datasets: [{
+            label: 'Jumlah Keterlambatan',
+            data: Object.values(kelasCount),
+            backgroundColor: 'rgba(255, 215, 0, 0.7)'
+          }]
+        }
+      });
+    }
+    
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = {
+        nama: document.getElementById('nama').value,
+        kelas: document.getElementById('kelas').value,
+        waktu: document.getElementById('waktu').value,
+        tanggal: document.getElementById('tanggal').value,
+        jumlah: document.getElementById('jumlah').value
+      };
+      dataSiswa.push(data);
+      localStorage.setItem('dataSiswa', JSON.stringify(dataSiswa));
+      renderTable();
+      renderChart();
+      form.reset();
+    });
+    
+    renderTable();
+    renderChart();
+  </script>
+</body>
+</html>
